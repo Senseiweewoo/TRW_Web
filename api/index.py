@@ -1,10 +1,13 @@
 import os
 import sys
 
-# Ensure inner application directory is available on Python path
-base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-trw_dir = os.path.join(base_dir, "TRW_Web")
-if trw_dir not in sys.path:
-    sys.path.insert(0, trw_dir)
+# Ensure application directories are on python path
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PARENT_DIR = os.path.dirname(CURRENT_DIR)
+TRW_DIR = os.path.join(PARENT_DIR, "TRW_Web")
+
+for path in [PARENT_DIR, TRW_DIR]:
+    if path not in sys.path:
+        sys.path.insert(0, path)
 
 from app import app

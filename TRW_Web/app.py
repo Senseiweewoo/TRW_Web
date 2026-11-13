@@ -1,6 +1,31 @@
-from flask import Flask, render_template, request, jsonify
+import os
+from flask import Flask, render_template, request, jsonify, send_from_directory
 
-app = Flask(__name__)
+# Resolve paths robustly across local run and Vercel serverless environment
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+template_candidates = [
+    os.path.join(BASE_DIR, "templates"),
+    os.path.join(BASE_DIR, "TRW_Web", "templates"),
+    os.path.join(os.path.dirname(BASE_DIR), "templates"),
+    os.path.join(os.path.dirname(BASE_DIR), "TRW_Web", "templates")
+]
+template_dir = next((c for c in template_candidates if os.path.isdir(c)), os.path.join(BASE_DIR, "templates"))
+
+static_candidates = [
+    os.path.join(BASE_DIR, "static"),
+    os.path.join(BASE_DIR, "TRW_Web", "static"),
+    os.path.join(os.path.dirname(BASE_DIR), "static"),
+    os.path.join(os.path.dirname(BASE_DIR), "TRW_Web", "static")
+]
+static_dir = next((c for c in static_candidates if os.path.isdir(c)), os.path.join(BASE_DIR, "static"))
+
+app = Flask(
+    __name__,
+    template_folder=template_dir,
+    static_folder=static_dir,
+    static_url_path="/static"
+)
 
 # Enriched book collection with realistic metadata and status
 books = [
@@ -111,7 +136,11 @@ books = [
 ]
 
 
+# Support all possible entry route patterns (root, rewrite paths)
 @app.route("/")
+@app.route("/api")
+@app.route("/api/index")
+@app.route("/index")
 def home():
     search = request.args.get("search", "").strip()
     selected_category = request.args.get("category", "").strip()
@@ -149,6 +178,7 @@ def home():
 
 
 @app.route("/api/borrow/<int:book_id>", methods=["POST"])
+@app.route("/api/index/api/borrow/<int:book_id>", methods=["POST"])
 def borrow_book(book_id):
     """Toggle book borrowing status for demonstration / interactive UX."""
     target_book = next((b for b in books if b["id"] == book_id), None)
@@ -167,6 +197,12 @@ def borrow_book(book_id):
         "book": target_book,
         "message": message
     })
+
+
+@app.route("/static/<path:filename>")
+def serve_static(filename):
+    """Fallback static file handler for serverless execution."""
+    return send_from_directory(static_dir, filename)
 
 
 if __name__ == "__main__":

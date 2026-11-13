@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="School Library Portal - Discover, search, and borrow books, textbooks, and academic resources.">
+
+    <title>School Library | Campus Book Catalog &amp; Student Portal</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <!-- NAVIGATION BAR -->
+    <header>
+        <nav class="navbar" aria-label="Main Navigation">
+            <div class="logo">
+                <span class="logo-icon">📚</span>
+                <div class="logo-text">
+                    <h2>School Library</h2>
+                    <span class="logo-sub">Campus Learning Commons</span>
+                </div>
+            </div>
+
+            <!-- Mobile Hamburger Toggle -->
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/" class="active">Home</a></li>
+                <li><a href="#books">Catalog</a></li>
+                <li><a href="#guidelines">Guidelines</a></li>
+                <li><a href="#announcements">Announcements</a></li>
+                <li><a href="#about">About</a></li>
+            </ul>
+
+            <a href="#books" class="nav-button">Explore Catalog</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- HERO SECTION -->
+        <section class="hero">
+            <div class="hero-content">
+                <p class="welcome">WELCOME TO OUR CAMPUS LIBRARY</p>
+                <h1>
+                    Discover Knowledge.
+                    <span>Empower Your Future.</span>
+                </h1>
+                <p class="hero-description">
+                    Your gateway to academic excellence, creative discovery, and technical mastery.
+                    Explore thousands of books, engineering references, and literary classics.
+                </p>
+
+                <div class="hero-actions">
+                    <a href="#books" class="primary-button">
+                        Browse Books &darr;
+                    </a>
+                    <a href="#guidelines" class="secondary-button">
+                        Borrowing Rules
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- QUICK INFORMATION / STATS -->
+        <section class="stats" aria-label="Library Overview Statistics">
+            <div class="stat-card">
+                <div class="stat-icon">📚</div>
+                <div class="stat-info">
+                    <h2>1,500+</h2>
+                    <p>Available Books</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🎓</div>
+                <div class="stat-info">
+                    <h2>500+</h2>
+                    <p>Registered Students</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🏷️</div>
+                <div class="stat-info">
+                    <h2>50+</h2>
+                    <p>Book Categories</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⏰</div>
+                <div class="stat-info">
+                    <h2>Mon – Fri</h2>
+                    <p>8:00 AM – 5:00 PM</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- BOOK COLLECTION SECTION -->
+        <section class="books-section" id="books">
+            <div class="section-heading">
+                <p class="subtitle">OUR COLLECTION</p>
+                <h2>Explore the Catalog</h2>
+                <p>Search books by title, author, category, or ISBN.</p>
+            </div>
+
+            <!-- CATEGORY FILTER PILLS -->
+            <div class="category-pills" role="navigation" aria-label="Filter by Category">
+                <a href="{{ url_for('home', search=search) }}#books"
+                   class="pill {% if not selected_category or selected_category.lower() == 'all' %}active{% endif %}">
+                    All Books
+                </a>
+                {% for cat in categories %}
+                <a href="{{ url_for('home', category=cat, search=search) }}#books"
+                   class="pill {% if selected_category == cat %}active{% endif %}">
+                    {{ cat }}
+                </a>
+                {% endfor %}
+            </div>
+
+            <!-- SEARCH BAR -->
+            <form action="/#books" method="GET" class="search-bar" role="search">
+                {% if selected_category and selected_category.lower() != 'all' %}
+                <input type="hidden" name="category" value="{{ selected_category }}">
+                {% endif %}
+
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input
+                        type="text"
+                        name="search"
+                        id="searchInput"
+                        placeholder="Search by title, author, category, or ISBN..."
+                        value="{{ search }}"
+                        aria-label="Search by title, author, category, or ISBN"
+                    >
+                    {% if search or (selected_category and selected_category.lower() != 'all') %}
+                    <a href="/#books" class="clear-search-btn" title="Clear search and filters" aria-label="Clear filters">&times;</a>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="search-submit-btn">Search</button>
+            </form>
+
+            <!-- RESULTS STATUS BAR -->
+            <div class="results-meta">
+                <p class="results-count">
+                    Showing <strong>{{ books|length }}</strong> of {{ total_books }} titles
+                    {% if selected_category and selected_category.lower() != 'all' %}
+                        in <em>"{{ selected_category }}"</em>
+                    {% endif %}
+                    {% if search %}
+                        matching <em>"{{ search }}"</em>
+                    {% endif %}
+                </p>
+
+                {% if search or (selected_category and selected_category.lower() != 'all') %}
+                <a href="/#books" class="reset-link">Reset all filters</a>
+                {% endif %}
+            </div>
+
+            <!-- BOOK CARDS GRID -->
+            <div class="book-container">
+                {% for book in books %}
+                <article class="book-card" id="book-card-{{ book.id }}">
+                    <div class="book-cover-container">
+                        <img
+                            src="{{ url_for('static', filename='images/' + book.image) }}"
+                            alt="{{ book.title }} by {{ book.author }}"
+                            loading="lazy"
+                            onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-cover.jpg') }}';"
+                        >
+                        <span class="status-badge status-{{ book.status|lower }}" id="badge-{{ book.id }}">
+                            <span class="status-dot"></span>
+                            {{ book.status }}
+                        </span>
+                    </div>
+
+                    <div class="book-info">
+                        <div class="book-meta-top">
+                            <span class="category">{{ book.category }}</span>
+                            <span class="pub-year">{{ book.year }}</span>
+                        </div>
+
+                        <h3 class="book-title" title="{{ book.title }}">{{ book.title }}</h3>
+                        <p class="book-author">By {{ book.author }}</p>
+
+                        <div class="book-card-footer">
+                            <span class="shelf-location">📍 {{ book.location }}</span>
+                            <button
+                                type="button"
+                                class="btn-view-details"
+                                onclick='openBookModal({{ book|tojson }})'
+                            >
+                                Details &rarr;
+                            </button>
+                        </div>
+                    </div>
+                </article>
+                {% else %}
+                <div class="no-results">
+                    <div class="no-results-icon">🔎</div>
+                    <h3>No matching books found</h3>
+                    <p>We couldn't find any books matching your criteria. Try adjusting your search term or selecting "All Books".</p>
+                    <a href="/#books" class="primary-button">View All Books</a>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- BORROWING GUIDELINES & HOURS -->
+        <section class="guidelines-section" id="guidelines">
+            <div class="section-heading">
+                <p class="subtitle">LIBRARY POLICIES</p>
+                <h2>Borrowing Guidelines &amp; Hours</h2>
+                <p>Everything you need to know about using campus library resources.</p>
+            </div>
+
+            <div class="guidelines-grid">
+                <div class="guideline-card">
+                    <div class="guideline-icon">🕒</div>
+                    <h3>Operating Schedule</h3>
+                    <p>Open Monday through Friday, 8:00 AM – 5:00 PM. Closed on official university holidays and weekends.</p>
+                </div>
+
+                <div class="guideline-card">
+                    <div class="guideline-icon">📚</div>
+                    <h3>Borrowing Privileges</h3>
+                    <p>Enrolled students may borrow up to 3 physical books at a time for a standard loan period of 14 calendar days.</p>
+                </div>
+
+                <div class="guideline-card">
+                    <div class="guideline-icon">🔄</div>
+                    <h3>Renewals &amp; Extensions</h3>
+                    <p>Books may be renewed once for an additional 7 days, provided no other student has placed a hold or reservation.</p>
+                </div>
+
+                <div class="guideline-card">
+                    <div class="guideline-icon">⚠️</div>
+                    <h3>Care &amp; Timely Returns</h3>
+                    <p>Please handle all materials with care. Prompt returns ensure equal access to required textbooks for all peers.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ANNOUNCEMENTS -->
+        <section class="announcements" id="announcements">
+            <div class="section-heading">
+                <p class="subtitle">STAY INFORMED</p>
+                <h2>Library Announcements</h2>
+                <p>Recent news, scheduled hours, and resource updates.</p>
+            </div>
+
+            <div class="announcement-container">
+                <div class="announcement-card">
+                    <div class="announcement-header">
+                        <span class="announcement-tag tag-schedule">SCHEDULE</span>
+                        <span class="announcement-date">Nov 12, 2026</span>
+                    </div>
+                    <h3>Regular Library Schedule &amp; Quiet Zones</h3>
+                    <p>
+                        The main library stack and computer engineering reference section are fully operational.
+                        Quiet study carrels on the second floor are open daily from 8:00 AM to 5:00 PM.
+                    </p>
+                </div>
+
+                <div class="announcement-card">
+                    <div class="announcement-header">
+                        <span class="announcement-tag tag-collection">NEW ARRIVALS</span>
+                        <span class="announcement-date">Nov 8, 2026</span>
+                    </div>
+                    <h3>New Computer Science &amp; Networking Acquisitions</h3>
+                    <p>
+                        New copies of core reference textbooks including <em>Computer Networks: A Systems Approach</em> and
+                        <em>Clean Code</em> are now cataloged and available for checkout at the reserve desk.
+                    </p>
+                </div>
+
+                <div class="announcement-card">
+                    <div class="announcement-header">
+                        <span class="announcement-tag tag-reminder">REMINDER</span>
+                        <span class="announcement-date">Nov 5, 2026</span>
+                    </div>
+                    <h3>End-of-Term Book Return Period</h3>
+                    <p>
+                        Students with borrowed materials due this month are reminded to submit their returns
+                        or process renewal requests before the cutoff date to clear academic clearances.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABOUT SECTION -->
+        <section class="about-section" id="about">
+            <div class="about-content">
+                <p class="subtitle">ABOUT OUR LIBRARY</p>
+                <h2>A Place for Learning and Discovery</h2>
+                <p>
+                    Our campus library provides students, faculty, and researchers with access to premier
+                    educational resources, modern technical publications, and quiet study facilities.
+                    We aim to cultivate lifelong reading habits, support engineering problem solving, and
+                    create an empowering academic environment.
+                </p>
+
+                <div class="about-highlights">
+                    <div class="highlight-item">
+                        <span class="hl-num">100%</span>
+                        <span class="hl-desc">Free Student Access</span>
+                    </div>
+                    <div class="highlight-item">
+                        <span class="hl-num">High-Speed</span>
+                        <span class="hl-desc">Wi-Fi &amp; Study Desks</span>
+                    </div>
+                    <div class="highlight-item">
+                        <span class="hl-num">Librarian</span>
+                        <span class="hl-desc">Research Assistance</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- INTERACTIVE BOOK DETAILS MODAL -->
+    <div class="modal-backdrop" id="bookModalBackdrop" aria-hidden="true" role="dialog" aria-modal="true">
+        <div class="modal-card">
+            <button class="modal-close-btn" id="modalCloseBtn" aria-label="Close modal">&times;</button>
+
+            <div class="modal-body">
+                <div class="modal-cover-wrapper">
+                    <img id="modalBookImage" src="" alt="Book Cover" class="modal-book-cover">
+                </div>
+
+                <div class="modal-details">
+                    <div class="modal-header-meta">
+                        <span class="category" id="modalBookCategory">Category</span>
+                        <span class="pub-year" id="modalBookYear">Year</span>
+                    </div>
+
+                    <h2 id="modalBookTitle" class="modal-title">Book Title</h2>
+                    <p id="modalBookAuthor" class="modal-author">By Author</p>
+
+                    <div class="modal-status-row">
+                        <span class="status-badge" id="modalBookStatus">
+                            <span class="status-dot"></span>
+                            <span id="modalBookStatusText">Available</span>
+                        </span>
+                        <span class="shelf-pill" id="modalBookLocation">📍 Shelf</span>
+                    </div>
+
+                    <div class="modal-specs-grid">
+                        <div class="spec-item">
+                            <span class="spec-label">ISBN:</span>
+                            <span class="spec-value" id="modalBookISBN">--</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Pages:</span>
+                            <span class="spec-value" id="modalBookPages">--</span>
+                        </div>
+                    </div>
+
+                    <div class="modal-synopsis">
+                        <h4>Synopsis</h4>
+                        <p id="modalBookDescription">Book description will appear here.</p>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn-borrow-toggle" id="modalBorrowBtn" onclick="toggleBorrowStatus()">
+                            Borrow Book
+                        </button>
+                        <button type="button" class="secondary-button" onclick="closeBookModal()">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div class="toast" id="toastNotification" role="alert" aria-live="polite"></div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <h2>📚 School Library</h2>
+                <p>Empowering students through knowledge, reading, and academic discovery.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4>Quick Navigation</h4>
+                <ul>
+                    <li><a href="#books">Catalog Search</a></li>
+                    <li><a href="#guidelines">Borrowing Guidelines</a></li>
+                    <li><a href="#announcements">Latest Announcements</a></li>
+                    <li><a href="#about">About the Library</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contact">
+                <h4>Library Information</h4>
+                <p>📍 Main Campus Learning Commons, Building A</p>
+                <p>✉️ library@school.edu.ph</p>
+                <p>⏰ Mon – Fri: 8:00 AM – 5:00 PM</p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p class="copyright">
+                &copy; 2026 School Library &bull; Polytechnic University of the Philippines &bull; All Rights Reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- INTERACTIVE JAVASCRIPT -->
+    <script>
+        // Current active book in modal
+        let currentModalBook = null;
+
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navLinks = document.getElementById('navLinks');
+
+        if (mobileMenuBtn && navLinks) {
+            mobileMenuBtn.addEventListener('click', () => {
+                const isOpen = navLinks.classList.toggle('nav-open');
+                mobileMenuBtn.classList.toggle('active');
+                mobileMenuBtn.setAttribute('aria-expanded', isOpen);
+            });
+
+            // Close mobile menu when link clicked
+            navLinks.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.classList.remove('nav-open');
+                    mobileMenuBtn.classList.remove('active');
+                    mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                });
+            });
+        }
+
+        // Book details modal handlers
+        const modalBackdrop = document.getElementById('bookModalBackdrop');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+        function openBookModal(book) {
+            currentModalBook = book;
+
+            document.getElementById('modalBookTitle').textContent = book.title;
+            document.getElementById('modalBookAuthor').textContent = 'By ' + book.author;
+            document.getElementById('modalBookCategory').textContent = book.category;
+            document.getElementById('modalBookYear').textContent = book.year;
+            document.getElementById('modalBookLocation').textContent = '📍 ' + book.location;
+            document.getElementById('modalBookISBN').textContent = book.isbn || 'N/A';
+            document.getElementById('modalBookPages').textContent = book.pages ? (book.pages + ' pages') : 'N/A';
+            document.getElementById('modalBookDescription').textContent = book.description;
+
+            const coverImg = document.getElementById('modalBookImage');
+            coverImg.src = "{{ url_for('static', filename='images/') }}" + book.image;
+            coverImg.onerror = function() {
+                this.src = "{{ url_for('static', filename='images/default-cover.jpg') }}";
+            };
+
+            updateModalStatusUI(book.status);
+
+            modalBackdrop.classList.add('modal-visible');
+            modalBackdrop.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBookModal() {
+            modalBackdrop.classList.remove('modal-visible');
+            modalBackdrop.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            currentModalBook = null;
+        }
+
+        if (modalCloseBtn) {
+            modalCloseBtn.addEventListener('click', closeBookModal);
+        }
+
+        modalBackdrop.addEventListener('click', (e) => {
+            if (e.target === modalBackdrop) {
+                closeBookModal();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modalBackdrop.classList.contains('modal-visible')) {
+                closeBookModal();
+            }
+        });
+
+        function updateModalStatusUI(status) {
+            const statusBadge = document.getElementById('modalBookStatus');
+            const statusText = document.getElementById('modalBookStatusText');
+            const borrowBtn = document.getElementById('modalBorrowBtn');
+
+            statusBadge.className = 'status-badge status-' + status.toLowerCase();
+            statusText.textContent = status;
+
+            if (status === 'Available') {
+                borrowBtn.textContent = 'Borrow This Book';
+                borrowBtn.className = 'btn-borrow-toggle btn-borrow';
+            } else if (status === 'Borrowed') {
+                borrowBtn.textContent = 'Return Book';
+                borrowBtn.className = 'btn-borrow-toggle btn-return';
+            } else {
+                borrowBtn.textContent = 'Join Waitlist (Reserved)';
+                borrowBtn.className = 'btn-borrow-toggle btn-reserved';
+            }
+        }
+
+        async function toggleBorrowStatus() {
+            if (!currentModalBook) return;
+
+            const borrowBtn = document.getElementById('modalBorrowBtn');
+            borrowBtn.disabled = true;
+            borrowBtn.textContent = 'Processing...';
+
+            try {
+                const response = await fetch('/api/borrow/' + currentModalBook.id, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    currentModalBook.status = data.book.status;
+                    updateModalStatusUI(data.book.status);
+
+                    // Update corresponding card badge in main catalog view
+                    const cardBadge = document.getElementById('badge-' + currentModalBook.id);
+                    if (cardBadge) {
+                        cardBadge.className = 'status-badge status-' + data.book.status.toLowerCase();
+                        cardBadge.innerHTML = '<span class="status-dot"></span> ' + data.book.status;
+                    }
+
+                    showToast(data.message, 'success');
+                } else {
+                    showToast(data.error || 'Failed to update book status', 'error');
+                }
+            } catch (err) {
+                showToast('Network error updating book status.', 'error');
+            } finally {
+                borrowBtn.disabled = false;
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toastNotification');
+            if (!toast) return;
+
+            toast.textContent = message;
+            toast.className = 'toast toast-' + type + ' toast-show';
+
+            setTimeout(() => {
+                toast.classList.remove('toast-show');
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
